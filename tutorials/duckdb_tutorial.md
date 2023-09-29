@@ -44,15 +44,30 @@ For this we are going to use Lesotho, a smaller country. First we load the data 
 
 ```python
 country_iso = "LSO"
+
 # TODO: store as lso_buildings table
-duckdb.sql("")
+duckdb.sql(f"CREATE TABLE lso_buildings AS SELECT * FROM parquet_scan('{prefix}/by_country_s2/country_iso={country_iso}/*.parquet')")
 ```
 
 Now we can count the buildings from the stored DuckDB table:
-
-```
+```python
+duckdb.sql(f"SELECT COUNT(*) FROM lso_buildings")
 # TODO: write query that outputs count of both building footprint sources
 ```
+
+Count buildings which are from Microsoft
+```python
+duckdb.sql(f"SELECT COUNT(*) FROM lso_buildings WHERE bf_source = 'microsoft'")
+# TODO: write query that outputs count of both building footprint sources
+```
+![result](./images/count_ms.png)
+
+Count buildings which are from Google
+```python
+duckdb.sql(f"SELECT COUNT(*) FROM lso_buildings WHERE bf_source = 'google'")
+# TODO: write query that outputs count of both building footprint sources
+```
+![result](./images/count_google.png)
 
 ### Count the buildings which have no associated country
 ```python
