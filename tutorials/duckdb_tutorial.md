@@ -72,8 +72,8 @@ duckdb.sql(f"SELECT COUNT(*) FROM lso_buildings WHERE bf_source = 'google'")
 │ count_star() │\
 │    int64     │\
 ├──────────────┤\
-│      1394189 │\
-└──────────────┘\
+│   1394189    │\
+└──────────────┘
 
 ### Count the buildings which have no associated country
 ```python
