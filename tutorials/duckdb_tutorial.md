@@ -103,13 +103,14 @@ aoi = "path/to/aoi.geojson"
 duckdb.sql(f"CREATE TABLE aoi AS SELECT * FROM ST_Read('{aoi}')")
 duckdb.sql("SELECT * FROM aoi").show()
 ```
-
+Load Lesotho from the merged dataset as a table
 ```python
-# Load Lesotho from the merged dataset as a table
 duckdb.sql(f"CREATE TABLE merged_bfs AS SELECT * FROM '{prefix}/by_country/country_iso={country_iso}/{country_iso}.parquet'")
 duckdb.sql("SELECT * FROM merged_bfs").show()
+```
 
-# Load Lesotho from Google V3 as a table
+Load Lesotho from Google V3 as a table
+```python
 prefix = "s3://us-west-2.opendata.source.coop/google-research-open-buildings/geoparquet-by-country"
 country_iso = "LSO"
 duckdb.sql(f"CREATE TABLE google_bfs AS SELECT * FROM '{prefix}/country_iso={country_iso}/{country_iso}.parquet'")
