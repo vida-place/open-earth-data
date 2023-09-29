@@ -117,12 +117,11 @@ duckdb.sql(f"CREATE TABLE google_bfs AS SELECT * FROM '{prefix}/country_iso={cou
 ```
 We now compare both tables to check for discrepancies in count value
 
-# Total number of Google buildings
+Total number of Google buildings
 ```python
 duckdb.sql("SELECT COUNT(*) FROM google_bfs").show()
 ```
-
+Total number of Google buildings in the merged dataset
 ```python
-# Total number of Google buildings in the merged dataset
 duckdb.sql("SELECT COUNT(*) FROM merged_bfs WHERE bf_source = 'google'").show()
 ```
