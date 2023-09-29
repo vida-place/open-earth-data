@@ -223,3 +223,47 @@ duckdb.sql("SELECT count(*) FROM intersected WHERE bf_source = 'google'").show()
 # ├──────────────┤
 # │            0 │
 # └──────────────┘
+
+
+
+# ----------------------------#
+#   BUILDING SIZE ANALYSIS    #
+# ----------------------------#
+
+# Compare building coverage area for both data sources (Google and Microsoft)
+
+sum_area_google = f"""
+    SELECT
+        SUM(area_in_meters) AS total_bf_area_google
+    FROM '{prefix}/by_country/country_iso={country_iso}/{country_iso}.parquet'
+        WHERE bf_source = 'google'
+"""
+duckdb.sql(sum_area_google).show()
+
+# ┌──────────────────────┐
+# │ total_bf_area_google │
+# │        double        │
+# ├──────────────────────┤
+# │    99861360.55789912 │
+# └──────────────────────┘
+
+
+
+sum_area_microsoft = f"""
+    SELECT
+        SUM(area_in_meters) AS total_bf_area_microsoft
+    FROM '{prefix}/by_country/country_iso={country_iso}/{country_iso}.parquet'
+        WHERE bf_source = 'microsoft'
+"""
+
+duckdb.sql(sum_area_microsoft).show()
+
+# ┌─────────────────────────┐
+# │ total_bf_area_microsoft │
+# │         double          │
+# ├─────────────────────────┤
+# │       3936758.674558368 │
+# └─────────────────────────┘
+
+
+
