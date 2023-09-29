@@ -67,7 +67,13 @@ Count buildings which are from Google
 duckdb.sql(f"SELECT COUNT(*) FROM lso_buildings WHERE bf_source = 'google'")
 # TODO: write query that outputs count of both building footprint sources
 ```
-![result](./images/count_google.png)
+<!-- ![result](./images/count_google.png) -->
+  ┌──────────────┐
+  │ count_star() │
+  │    int64     │
+  ├──────────────┤
+  │      1394189 │
+  └──────────────┘
 
 ### Count the buildings which have no associated country
 ```python
