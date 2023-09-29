@@ -4,11 +4,11 @@ This tutorial is built around the recently released [Google-Microsoft Open Build
 
 # Setting up DuckDB
 
-```
+```python
 pip install duckdb
 ```
 
-```
+```python
 import duckdb
 
 duckdb.sql('INSTALL httpfs')
@@ -23,7 +23,7 @@ duckdb.sql('LOAD spatial')
 
 
 ### Load a full (large) country
-```
+```python
 prefix = "s3://us-west-2.opendata.source.coop/vida/google-microsoft-open-buildings/geoparquet"
 country_iso = "IDN"
 
@@ -33,7 +33,7 @@ duckdb.sql(f"SELECT * FROM '{prefix}/by_country/country_iso={country_iso}/{count
 
 ### Load using the S2 partitions
 
-```
+```python
 duckdb.sql(f"SELECT * FROM parquet_scan('{prefix}/by_country_s2/country_iso={country_iso}/*.parquet')").show()
 ```
 
@@ -43,7 +43,7 @@ write something about execution time
 
 For this we are going to use Lesotho, a smaller country. First we load the data from S3 and store it as a DuckDB table:
 
-```
+```python
 country_iso = "LSO"
 # TODO: store as lso_buildings table
 duckdb.sql("")
