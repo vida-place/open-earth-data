@@ -94,3 +94,34 @@ max_query = f"""
 """
 duckdb.sql(max_query).show()
 ``` 
+
+## Clip and compare Google V3 with merged dataset
+
+Load a AOI GeoJSON as DuckDB table
+```python
+aoi = "path/to/aoi.geojson"
+duckdb.sql(f"CREATE TABLE aoi AS SELECT * FROM ST_Read('{aoi}')")
+duckdb.sql("SELECT * FROM aoi").show()
+```
+
+```python
+# Load Lesotho from the merged dataset as a table
+duckdb.sql(f"CREATE TABLE merged_bfs AS SELECT * FROM '{prefix}/by_country/country_iso={country_iso}/{country_iso}.parquet'")
+duckdb.sql("SELECT * FROM merged_bfs").show()
+
+# Load Lesotho from Google V3 as a table
+prefix = "s3://us-west-2.opendata.source.coop/google-research-open-buildings/geoparquet-by-country"
+country_iso = "LSO"
+duckdb.sql(f"CREATE TABLE google_bfs AS SELECT * FROM '{prefix}/country_iso={country_iso}/{country_iso}.parquet'")
+```
+We now compare both tables to check for discrepancies in count value
+
+# Total number of Google buildings
+```python
+duckdb.sql("SELECT COUNT(*) FROM google_bfs").show()
+```
+
+```python
+# Total number of Google buildings in the merged dataset
+duckdb.sql("SELECT COUNT(*) FROM merged_bfs WHERE bf_source = 'google'").show()
+```
