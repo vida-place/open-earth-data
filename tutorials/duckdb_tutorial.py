@@ -65,7 +65,7 @@ duckdb.sql("SELECT * FROM merged_bfs").show()
 
 # Load Lesotho from Google V3 as a table
 prefix = "s3://us-west-2.opendata.source.coop/google-research-open-buildings/geoparquet-by-country"
-country_iso = "LS"
+country_iso = "LSO"
 duckdb.sql(f"CREATE TABLE google_bfs AS SELECT * FROM '{prefix}/country_iso={country_iso}/{country_iso}.parquet'")
 
 # Compare complete dataset
