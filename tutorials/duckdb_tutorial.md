@@ -69,7 +69,7 @@ duckdb.sql(f"SELECT COUNT(*) FROM lso_buildings WHERE bf_source = 'google'")
 ```
 <!-- ![result](./images/count_google.png) -->
 ┌──────────────┐\
-│ count_star()     │\
+│ count_star()                 │\
 │    int64     │\
 ├──────────────┤\
 │   1394189    │\
