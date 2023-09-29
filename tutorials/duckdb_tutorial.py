@@ -47,8 +47,58 @@ duckdb.sql(f"SELECT count(*) FROM parquet_scan('{prefix}/by_country_s2/country_i
 # │      1394189 │
 # └──────────────┘
 
+# Count buildings having no associated ISO CODE
+country_iso_none = 'None'
+duckdb.sql(f"SELECT COUNT(*) FROM parquet_scan('{prefix}/by_country_s2/country_iso={country_iso_none}/*.parquet')").show()
+# ┌──────────────┐
+# │ count_star() │
+# │    int64     │
+# ├──────────────┤
+# │      1013702 │
+# └──────────────┘
+
 # TODO: write something about the added 151722 MS buildings
 
+# -------------------------------------------------------#
+# OBTAIN SOME STATISTICS OF THE S2 PARTITIONED BUILDINGS #
+# -------------------------------------------------------#
+
+# Find the average number of buildings per S2 partition in a country
+country_iso = 'AUS'
+table_query = f"""
+    CREATE TABLE tempTable AS
+    SELECT s2_id, COUNT(geometry) AS building_count
+    FROM parquet_scan('{prefix}/by_country_s2/country_iso={country_iso}/*.parquet')
+    GROUP BY(s2_id)
+"""
+duckdb.sql(table_query)
+
+# obtain the average number of buildings per S2 grid
+avg_query = f"""
+    SELECT AVG(building_count) AS avg_num_buildings
+    FROM tempTable
+"""
+
+duckdb.sql(avg_query).show()
+# ┌────────────────────┐
+# │ avg_num_buildings  │
+# │       double       │
+# ├────────────────────┤
+# │ 3771841.6666666665 │
+# └────────────────────┘
+
+# Obtain the S2 grid with the maximum number of building 
+max_query = f"""
+    SELECT s2_id, MAX(building_count)
+    FROM tempTable
+"""
+duckdb.sql(max_query).show()
+# ┌─────────────────────┬────────────────┐
+# │        s2_id        │ building_count │
+# │        int64        │     int64      │
+# ├─────────────────────┼────────────────┤
+# │ 7782220156096217088 │        9452987 │
+# └─────────────────────┴────────────────┘
 
 # -----------------------------------------------#
 # CLIP AND COMPARE GOOGLE V3 WITH MERGED DATASET #
@@ -65,7 +115,7 @@ duckdb.sql("SELECT * FROM merged_bfs").show()
 
 # Load Lesotho from Google V3 as a table
 prefix = "s3://us-west-2.opendata.source.coop/google-research-open-buildings/geoparquet-by-country"
-country_iso = "LS"
+country_iso = "LSO"
 duckdb.sql(f"CREATE TABLE google_bfs AS SELECT * FROM '{prefix}/country_iso={country_iso}/{country_iso}.parquet'")
 
 # Compare complete dataset
