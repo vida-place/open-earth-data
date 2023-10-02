@@ -1,6 +1,6 @@
 # Google-Microsoft Open Buildings - DuckDB tutorial
 
-This tutorial is built around the recently released [Google-Microsoft Open Buildings - combined by VIDA](https://beta.source.coop/repositories/vida/google-microsoft-open-buildings/description) dataset on [Source Cooperative](https://beta.source.coop/). We will show you how to access the cloud-native dataformats directly from Source Cooperative using [DuckDB](https://duckdb.org/). We will talk about the partition strategy, its implementations for performance and we will do some tests comparing the merged dataset with just the Google V3 building footprints, which is also hosted on [Source Cooperative](https://beta.source.coop/repositories/cholmes/google-open-buildings/description)
+This tutorial is built around the recently released [Google-Microsoft Open Buildings - combined by VIDA](https://beta.source.coop/repositories/vida/google-microsoft-open-buildings/description) dataset on [Source Cooperative](https://beta.source.coop/). We will show you how to access the cloud-native data formats directly from Source Cooperative using [DuckDB](https://duckdb.org/). We will talk about the partition strategy, its implementations for performance and we will do some tests comparing the merged dataset with just the Google V3 building footprints, which is also hosted on [Source Cooperative](https://beta.source.coop/repositories/cholmes/google-open-buildings/description)
 
 ## Setting up DuckDB
 
@@ -22,18 +22,18 @@ duckdb.sql('LOAD spatial')
 ```
 
 With these steps completed, our setup is primed and ready!
-The `httpfs` extension empowers us with the capability to read files directly from S3., while the `spatial` extension, as the name suggests, will be leveraged for executing geospatial queries later on in this tutorial. Through these commands, we ensure that our DuckDB setup is well-equipped with the necessary extensions for the tasks ahead.
+The `httpfs` extension empowers us with the capability to read files directly from S3, while the `spatial` extension, as the name suggests, will be leveraged for executing geospatial queries later on in this tutorial. Through these commands, we ensure that our DuckDB setup is well-equipped with the necessary extensions for the tasks ahead.
 
 ## Loading GeoParquet directly from S3 to DuckDB
 
-Now that DuckDB is set up and ready, the next step is to load the building footprints data. The dataset is partitioned usign two different strategies:
+Now that DuckDB is set up and ready, the next step is to load the building footprints data. The dataset is partitioned using two different strategies:
 
 - by country
 - by country, sub-partitioned by S2 grid
 
-The sub-partitioning is used to optimise performance when reading GeoParquet files. By setting a cap of 20 millions building footpritns per file, we keep the row group size somehwat optimised. Loading a large GeoParquet file directly is a lot slower.  
+The sub-partitioning is used to optimise performance when reading GeoParquet files. By setting a cap of 20 millions building footprints per file, we keep the row group size somewhat optimised. Loading a large GeoParquet file directly is a lot slower.  
 
-Lets first load a full (large) country using a single file:
+Let's first load a full (large) country using a single file:
 
 ### Load a full (large) country
 ```python
@@ -50,13 +50,12 @@ duckdb.sql(f"SELECT * FROM '{prefix}/{partitions}/country_iso={country_iso}/{cou
 duckdb.sql(f"SELECT * FROM parquet_scan('{prefix}/by_country_s2/country_iso={country_iso}/*.parquet')").show()
 ```
 
-This loads in under 30 seconds, are big improvement!
+The second loading approach is performed under 30 seconds, which represents a big improvement compared to the first one!
 
-write something about execution time
 
 ## Count the building footprints and check the source
 
-Now, let's delve into some analysis on our dataset, focusing on the country Lesotho due to its smaller size. Initially, we'll fetch the data from S3 and organize it into a DuckDB table:
+Now, let's delve into some analyses on our dataset, focusing on the country Lesotho due to its smaller size. Initially, we'll fetch the data from S3 and organize it into a DuckDB table:
 
 ```python
 partitions = "by_country_s2"
@@ -65,24 +64,24 @@ country_iso = "LSO"
 duckdb.sql(f"CREATE TABLE lso_buildings AS SELECT * FROM parquet_scan('{prefix}/{partitions}/country_iso={country_iso}/*.parquet')")
 ```
 
-In the code snippet above:
+In the code snippet above, we:
 
-- We define the partition scheme and country ISO code as variables.
+- Define the partition scheme and country ISO code as variables.
 - Utilize DuckDB's parquet_scan function to read Parquet files directly from S3, conforming to the specified partitioning schema and country filter.
 - Employ a CREATE TABLE AS SELECT (CTAS) statement to instantiate a new table lso_buildings, populated with the data retrieved from S3.
 
 Proceeding to the analysis, we'll aggregate the building footprints in our dataset, segmented by their data source:
 
 ```python
-duckdb.sql(f"SELECT bf_source, COUNT(*) AS building_count FROM lso_buildings GROUP BY bf_source;").show()
+duckdb.sql(f"SELECT bf_source, COUNT(*) AS buildings_count FROM lso_buildings GROUP BY bf_source;").show()
 
-┌───────────┬────────────────┐
-│ bf_source │ building_count │
-│  varchar  │     int64      │
-├───────────┼────────────────┤
-│ google    │        1394189 │
-│ microsoft │         151722 │
-└───────────┴────────────────┘
+┌───────────┬─────────────────┐
+│ bf_source │ buildings_count │
+│  varchar  │     int64       │
+├───────────┼─────────────────┤
+│ google    │        1394189  │
+│ microsoft │         151722  │
+└───────────┴─────────────────┘
 ```
 
 From the output:
@@ -96,7 +95,7 @@ This analysis sheds light on the substantial contribution from combining these t
 
 ## S2 partition statistics
 
-Let's delve into analyzing S2 partition statistics. For this exercise, we'll select a country that's sub-divided into multiple S2 grids and compute the building count per grid ID. We'll use Australia (AUS) as our subject country due to its extensive geographical spread and substantial urban footprint.
+Let's delve into analyzing S2 partition statistics. For this exercise, we'll select a country that's sub-divided into multiple S2 grids and compute the buildings count per grid ID. We'll use Australia (AUS) as our subject country due to its extensive geographical spread and substantial urban footprints.
 
 ```python
 # Using Australia as our sample country (AUS)
@@ -106,20 +105,20 @@ country_iso = "AUS"
 # Create a table for storing our queried data
 table_query = f"""
     CREATE TABLE aus_buildings AS
-    SELECT s2_id, COUNT(geometry) AS building_count
+    SELECT s2_id, COUNT(geometry) AS buildings_count
     FROM parquet_scan('{prefix}/{partitions}/country_iso={country_iso}/*.parquet')
     GROUP BY(s2_id)
 """
 duckdb.sql(table_query)
 
-┌──────────────────────┬────────────────┐
-│        s2_id         │ building_count │
-│        int64         │     int64      │
-├──────────────────────┼────────────────┤
-│  6052837899185946624 │         422107 │
-│  3170534137668829184 │        1440431 │
-│  7782220156096217088 │        9452987 │
-└──────────────────────┴────────────────┘
+┌──────────────────────┬─────────────────┐
+│        s2_id         │ buildings_count │
+│        int64         │     int64       │
+├──────────────────────┼─────────────────┤
+│  6052837899185946624 │         422107  │
+│  3170534137668829184 │        1440431  │
+│  7782220156096217088 │        9452987  │
+└──────────────────────┴─────────────────┘
 ```
 
 In the result above, Australia is partitioned into three distinct S2 grids, each with a varying number of buildings. This showcases the geographical distribution and density of buildings across different regions of the country.
@@ -128,7 +127,7 @@ Now, let's compute the average number of buildings per S2 grid ID to get a sense
 
 ```python
 query = f"""
-    SELECT ROUD(AVG(building_count), 0) AS avg_num_buildings
+    SELECT ROUND(AVG(buildings_count), 0) AS avg_num_buildings
     FROM aus_buildings
 """
 
@@ -157,7 +156,7 @@ country_iso = "LS"
 duckdb.sql(f"CREATE TABLE lso_buildings_google AS SELECT * FROM '{prefix}/country_iso={country_iso}/{country_iso}.parquet'")
 ```
 
-First, lets compare both tables to check for discrepancies in count value. We will first start by counting the original dataset
+First, let's compare both tables to check for discrepancies in count value. We will first start by counting the original dataset
 ```python
 duckdb.sql("SELECT COUNT(*) FROM lso_buildings_google").show()
 ┌──────────────┐
@@ -183,7 +182,7 @@ duckdb.sql("SELECT COUNT(*) FROM lso_buildings WHERE bf_source = 'google'").show
 
 The count shows a difference of 36 buildings between the datasets. This difference could be due to slight variations in processing steps. Both datasets used CGAZ boundaries for partitioning, but our method ran in BigQuery, utilizing the centroids of building footprints to intersect with CGAZ boundaries. This can explain the small discrepancy for geometries that cross the boundary polygon.
 
-For a more precise comparison, executing a spatial join or intersection analysis to find common geometries between the datasets would give more insights. This deeper dive would help understand the spatial relationship and alignment between the original and merged datasets, ensuring data integrity and consistency. So lets do this!
+For a more precise comparison, executing a spatial join or intersection analysis to find common geometries between the datasets would give more insights. This deeper dive would help understand the spatial relationship and alignment between the original and merged datasets, ensuring data integrity and consistency. So let's do this!
 
 ## Compare Google V3 and merged dataset using common geoboundary (AOI)
 
@@ -277,7 +276,7 @@ duckdb.sql("SELECT count(*) FROM non_intersecting WHERE bf_source = 'microsoft'"
 └──────────────┘
 ```
 
-The count confirms all 348 non-intersecting buildings are sourced from Microsoft, aligning with our expectations and indicating a successful merge without duplicate entries from Google. These spatial comparison ensures the integrity of our merged dataset within the specified AOI.
+The count confirms all 348 non-intersecting buildings are sourced from Microsoft, aligning with our expectations and indicating a successful merge without duplicate entries from Google. These spatial comparisons ensure the integrity of our merged dataset within the specified AOI.
 
 ## Exporting to other data formats
 Having completed our analyses, it's time to export the data to desired geospatial data formats. In this instance, we'll utilize FlatGeobuf due to its efficiency in handling geospatial data:
@@ -299,7 +298,7 @@ Here, notice the `EXCLUDE` keyword? It's a powerful feature provided by DuckDB, 
 With these commands, we can easily export our data to FlatGeobuf format, which can then be used in other geospatial tools or analyses.
 
 ## Conclusion
-Throughout this tutorial, we navigated the process of setting up DuckDB, importing geospatial data, and performing various analyses on building footprints leveraging the functionalities of the `spatial` and `httpfs` extensions. Through a series of structured steps, we managed to load, process, and analyze building footprint data from different sources, ensuring data integrity and consistency.
+Throughout this tutorial, we navigated the process of setting up DuckDB, importing geospatial data, and performing various analyses on building footprints leveraging the functionalities of the `spatial` and `httpfs` extensions. Through a series of structured steps, we managed to load, process, and analyze building footprints data from different sources, ensuring data integrity and consistency.
 
 We dove into a detailed comparison between the original Google V3 dataset and our merged dataset within a specified geoboundary to ascertain the absence of overlaps or duplicate entries. The analyses were bolstered by the ability to create subsets of the dataset, intersect with predefined geoboundaries, and examine the spatial relationship between datasets.
 
