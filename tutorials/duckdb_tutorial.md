@@ -75,7 +75,7 @@ country_iso_null = "None"
 duckdb.sql(f"SELECT COUNT(*) FROM parquet_scan('{prefix}/by_country_s2/country_iso={country_iso_null}/*.parquet')").show()
 duckdb.sql("")
 ```
-
+![result](./images/no_iso.png)
 ## Generate some S2 partition statistics
 ### Obtain the average number of buildings in an S2 grid
 
@@ -100,7 +100,7 @@ avg_query = f"""
 
 duckdb.sql(avg_query).show()
 ```
-
+![result](./images/avg_building.png)
 ### Obtain the S2 grid with the maximum number of building
 ```python
 max_query = f"""
@@ -109,6 +109,7 @@ max_query = f"""
 """
 duckdb.sql(max_query).show()
 ``` 
+![result](./images/max_building.png)
 
 ## Clip and compare Google V3 with merged dataset
 
