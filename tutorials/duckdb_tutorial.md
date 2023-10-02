@@ -282,14 +282,14 @@ The count confirms all 348 non-intersecting buildings are sourced from Microsoft
 Having completed our analyses, it's time to export the data to desired geospatial data formats. In this instance, we'll utilize FlatGeobuf due to its efficiency in handling geospatial data:
 
 ```python
-output_file = "path/to/output/subset.fgb
+output_file = "path/to/output/subset.fgb"
 duckdb.sql(f"COPY (SELECT * from lso_buildings_clipped) TO '{output_file}' WITH  (FORMAT GDAL, DRIVER 'FlatGeobuf');")
 ```
 
 This command exports the clipped dataset to a FlatGeobuf file. Now, if we intend to export the entire country's data:
 
 ```python
-output_file = "path/to/output/country.fgb
+output_file = "path/to/output/country.fgb"
 duckdb.sql(f"COPY (SELECT * EXCLUDE geometry, ST_GeomFromWKB(geometry) AS geometry from lso_buildings) TO '{output_file}' WITH  (FORMAT GDAL, DRIVER 'FlatGeobuf');")
 ```
 
