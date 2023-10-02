@@ -35,6 +35,8 @@ The sub-partitioning is used to optimise performance when reading GeoParquet fil
 
 Let's first load a full (large) country using a single file:
 
+> :warning: **This is a large dataset, loading it using a single file can take a long time on your local machine**
+
 ### Load a full (large) country
 ```python
 prefix = "s3://us-west-2.opendata.source.coop/vida/google-microsoft-open-buildings/geoparquet"
@@ -45,6 +47,7 @@ country_iso = "IDN"
 duckdb.sql(f"SELECT * FROM '{prefix}/{partitions}/country_iso={country_iso}/{country_iso}.parquet'").show()
 ```
 
+A more optimised approach is to use DuckDB's `parquet_scan` function:
 ### Load using the S2 partitions
 ```python
 duckdb.sql(f"SELECT * FROM parquet_scan('{prefix}/by_country_s2/country_iso={country_iso}/*.parquet')").show()
