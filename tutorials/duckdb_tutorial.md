@@ -121,6 +121,7 @@ duckdb.sql("SELECT * FROM aoi").show()
 ```
 Load Lesotho from the merged dataset as a table
 ```python
+country_iso = "LSO"
 duckdb.sql(f"CREATE TABLE merged_bfs AS SELECT * FROM '{prefix}/by_country/country_iso={country_iso}/{country_iso}.parquet'")
 duckdb.sql("SELECT * FROM merged_bfs").show()
 ```
@@ -137,7 +138,99 @@ Total number of Google buildings
 ```python
 duckdb.sql("SELECT COUNT(*) FROM google_bfs").show()
 ```
+![result](./images/google_v3_bfs.png)
 Total number of Google buildings in the merged dataset
 ```python
 duckdb.sql("SELECT COUNT(*) FROM merged_bfs WHERE bf_source = 'google'").show()
+```
+![result](./images/google_merged_bfs.png)
+
+## Compare Google V3 and merged dataset using common geoboundary (AOI)
+Create subsets by finding polygons intersecting with LSO geoboundary for each of the datasets. 
+
+```python
+# Clip merged table
+clip_query = """
+CREATE TABLE clipped_merged_bfs AS
+SELECT ST_Intersection(ST_GeomFromWKB(b.geometry), ST_GeomFromWKB(a.wkb_geometry)) AS geom, b.bf_source
+FROM merged_bfs b, aoi a
+WHERE ST_Intersects(ST_GeomFromWKB(b.geometry), ST_GeomFromWKB(a.wkb_geometry));
+"""
+duckdb.sql(clip_query)
+```
+```python
+# Clip google table
+clip_query = """
+CREATE TABLE clipped_google_bfs AS
+SELECT ST_Intersection(ST_GeomFromWKB(b.geometry), ST_GeomFromWKB(a.wkb_geometry)) AS geom
+FROM google_bfs b, aoi a
+WHERE ST_Intersects(ST_GeomFromWKB(b.geometry), ST_GeomFromWKB(a.wkb_geometry));
+"""
+duckdb.sql(clip_query)
+```
+
+We then compare the total number of buildings in each of the clipped datasets
+```python
+# Total number of Google buildings
+duckdb.sql("SELECT COUNT(*) FROM clipped_google_bfs").show()
+``` 
+
+```python
+# Total number of Google buildings in the merged dataset
+duckdb.sql("SELECT COUNT(*) FROM clipped_merged_bfs WHERE bf_source = 'google'").show()
+```
+
+We can then go a step further to see the number of building footprints added by Microsoft
+```python
+duckdb.sql("SELECT COUNT(*) FROM clipped_merged_bfs WHERE bf_source = 'microsoft'").show()
+```
+
+We can also confirm that there is no overlap and that there is no double count of the building footprint
+```python
+# Intersect both clipped tables and check that we do not have overlap
+clip_query = """
+CREATE TABLE intersected AS
+SELECT m.*
+FROM clipped_merged_bfs m
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM clipped_google_bfs g
+    WHERE ST_Intersects(m.geom, g.geom)
+);
+
+"""
+duckdb.sql(clip_query)
+# duckdb.sql("SELECT * FROM intersected").show()
+duckdb.sql("SELECT count(*) FROM intersected").show()
+``` 
+
+If we check the number of footprints from the google source we find out there is none indicating no double counting
+```python
+duckdb.sql("SELECT count(*) FROM intersected WHERE bf_source = 'google'").show()
+```
+
+## Building size analysis
+Here we compare the building coverage area for both data sources (Google and Microsoft)
+
+```python
+# The building coverage of google source
+sum_area_google = f"""
+    SELECT
+        SUM(area_in_meters) AS total_bf_area_google
+    FROM '{prefix}/by_country/country_iso={country_iso}/{country_iso}.parquet'
+        WHERE bf_source = 'google'
+"""
+duckdb.sql(sum_area_google).show()
+```
+
+```python
+# The estimated area covered by buildings captured by microsoft
+sum_area_microsoft = f"""
+    SELECT
+        SUM(area_in_meters) AS total_bf_area_microsoft
+    FROM '{prefix}/by_country/country_iso={country_iso}/{country_iso}.parquet'
+        WHERE bf_source = 'microsoft'
+"""
+
+duckdb.sql(sum_area_microsoft).show()
 ```
