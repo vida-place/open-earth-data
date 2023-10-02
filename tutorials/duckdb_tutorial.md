@@ -306,3 +306,6 @@ We dove into a detailed comparison between the original Google V3 dataset and ou
 Moreover, we explored the robust exporting capabilities of DuckDB, which facilitated the conversion of our analyzed data into the efficient FlatGeobuf format, ready for further use or sharing.
 
 In this tutorial, you've picked up some useful tools and techniques that can be applied straightaway to our [Google-Microsoft Open Buildings - combined by VIDA](https://beta.source.coop/vida/google-microsoft-open-buildings/) dataset hosted on Source Cooperative. DuckDB stands out by allowing direct data access from Source Cooperative, which streamlines the exploration and analysis of our dataset. This feature, along with DuckDB's interactive exploration capabilities, simplifies data analysis significantly. Now, with DuckDB, you can dive right into the data on Source Cooperative, utilizing the skills you've acquired to conduct your analysis efficiently and effectively.
+
+## Authors
+This tutorial is a collaborative creation of the [VIDA](https://vida.place/) Data Engineering team, brought to you by [Chima](https://github.com/ChimaPaulo), [Shammah](https://github.com/theTrueBoolean), [Iffanice](https://github.com/ZeLynxy), and [Darell](https://github.com/dvd3v).
