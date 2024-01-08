@@ -4,7 +4,7 @@ This tutorial is built around the recently released [Google-Microsoft Open Build
 
 ## Setting up DuckDB
 
-Kickstarting this tutorial entails setting up DuckDB. Given our use of Python, a simple pip installation command will suffice:
+Kickstarting this tutorial entails setting up DuckDB v0.9.2. Given our use of Python, a simple pip installation command will suffice:
 
 ```python
 pip install duckdb
@@ -191,10 +191,10 @@ For a more precise comparison, executing a spatial join or intersection analysis
 
 In this analysis, we aim to ensure that the merging strategy didn't result in duplicate buildings. We'll create a subset of the dataset within a specific geoboundary (Area Of Interest - AOI) and compare the Google V3 dataset with our merged dataset.
 
-Let's start by loading our AOI into a DuckDB table:
+Let's start by loading our AOI into a DuckDB table. Given a current limitation with DuckDB 0.9.2 - see issue [#1](https://github.com/vida-impact/open-earth-data/issues/1) - please make sure to download the [boundary file](https://github.com/vida-impact/open-earth-data/raw/main/tutorials/boundary.geojson) first and load it from a local path:
 
 ```python
-aoi = "https://github.com/vida-impact/open-earth-data/raw/main/tutorials/boundary.geojson"
+aoi = "/path/to/boundary.geojson"
 duckdb.sql(f"CREATE TABLE aoi AS SELECT * FROM ST_Read('{aoi}')")
 duckdb.sql("SELECT * FROM aoi").show()
 ```
@@ -205,18 +205,18 @@ Now, let's clip the datasets using our AOI to make the analysis more manageable:
 # Clipping the merged dataset
 query = """
 CREATE TABLE lso_buildings_clipped AS
-SELECT ST_Intersection(ST_GeomFromWKB(b.geometry), ST_GeomFromWKB(a.wkb_geometry)) AS geom, b.bf_source
+SELECT ST_Intersection(ST_GeomFromWKB(b.geometry), a.geom) AS geom, b.bf_source
 FROM lso_buildings b, aoi a
-WHERE ST_Intersects(ST_GeomFromWKB(b.geometry), ST_GeomFromWKB(a.wkb_geometry));
+WHERE ST_Intersects(ST_GeomFromWKB(b.geometry), a.geom);
 """
 duckdb.sql(query)
 
 # Clipping the original Google V3 dataset
 query = """
 CREATE TABLE lso_buildings_google_clipped AS
-SELECT ST_Intersection(ST_GeomFromWKB(b.geometry), ST_GeomFromWKB(a.wkb_geometry)) AS geom
+SELECT ST_Intersection(ST_GeomFromWKB(b.geometry), a.geom) AS geom
 FROM lso_buildings_google b, aoi a
-WHERE ST_Intersects(ST_GeomFromWKB(b.geometry), ST_GeomFromWKB(a.wkb_geometry));
+WHERE ST_Intersects(ST_GeomFromWKB(b.geometry), a.geom);
 """
 duckdb.sql(query)
 ```
