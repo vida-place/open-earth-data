@@ -114,6 +114,8 @@ table_query = f"""
 """
 duckdb.sql(table_query)
 
+duckdb.sql("SELECT * FROM aus_buildings").show()
+
 ┌──────────────────────┬─────────────────┐
 │        s2_id         │ buildings_count │
 │        int64         │     int64       │
