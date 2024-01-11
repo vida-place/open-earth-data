@@ -17,7 +17,7 @@ import duckdb
 
 duckdb.sql('INSTALL httpfs')
 duckdb.sql('LOAD httpfs')
-duckdb.sql('INSTALL spatial')
+duckdb.sql("FORCE INSTALL spatial FROM 'http://nightly-extensions.duckdb.org';")
 duckdb.sql('LOAD spatial')
 ```
 
@@ -193,10 +193,10 @@ For a more precise comparison, executing a spatial join or intersection analysis
 
 In this analysis, we aim to ensure that the merging strategy didn't result in duplicate buildings. We'll create a subset of the dataset within a specific geoboundary (Area Of Interest - AOI) and compare the Google V3 dataset with our merged dataset.
 
-Let's start by loading our AOI into a DuckDB table. Given a current limitation with DuckDB 0.9.2 - see issue [#1](https://github.com/vida-impact/open-earth-data/issues/1) - please make sure to download the [boundary file](https://github.com/vida-impact/open-earth-data/raw/main/tutorials/boundary.geojson) first and load it from a local path:
+Let's start by loading our AOI into a DuckDB table:
 
 ```python
-aoi = "/path/to/boundary.geojson"
+aoi = "https://github.com/vida-impact/open-earth-data/raw/main/tutorials/boundary.geojson"
 duckdb.sql(f"CREATE TABLE aoi AS SELECT * FROM ST_Read('{aoi}')")
 duckdb.sql("SELECT * FROM aoi").show()
 ```
